@@ -1,0 +1,2050 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MijnBoekhouding</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg: #f4f1eb;
+  --surface: #ffffff;
+  --surface2: #faf8f4;
+  --border: #e8e2d8;
+  --green: #1e3d2b;
+  --green-light: #e8f2eb;
+  --green-border: #c8e0cf;
+  --gold: #c8a96e;
+  --text: #1a1a18;
+  --muted: #7a7468;
+  --danger: #c0392b;
+  --danger-bg: #fdf0ee;
+  --danger-border: #f0c4bf;
+  --orange: #e67e22;
+  --orange-bg: #fef5ec;
+  --orange-border: #f5cda0;
+  --sh: 0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,0,.04);
+  --sh-lg: 0 8px 32px rgba(0,0,0,.14);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; min-height: 100vh; }
+
+.app { display: flex; min-height: 100vh; }
+.sidebar { width: 230px; background: var(--green); color: #fff; display: flex; flex-direction: column; position: fixed; inset: 0 auto 0 0; z-index: 200; }
+.sb-logo { padding: 26px 22px 18px; border-bottom: 1px solid rgba(255,255,255,.1); }
+.sb-logo h1 { font-family: 'DM Serif Display', serif; font-size: 21px; line-height: 1.2; }
+.sb-logo span { font-size: 10px; color: rgba(255,255,255,.4); letter-spacing: .5px; margin-top: 5px; display: block; }
+.sb-nav { flex: 1; padding: 12px 0; }
+.nav-item { display: flex; align-items: center; gap: 11px; padding: 11px 22px; cursor: pointer; color: rgba(255,255,255,.65); font-size: 13.5px; border-left: 3px solid transparent; transition: all .15s; }
+.nav-item:hover { background: rgba(255,255,255,.08); color: #fff; }
+.nav-item.active { background: rgba(255,255,255,.11); color: #fff; border-left-color: var(--gold); }
+.nav-item .ico { font-size: 15px; width: 20px; text-align: center; }
+.sb-footer { padding: 14px 22px; border-top: 1px solid rgba(255,255,255,.1); font-size: 11px; color: rgba(255,255,255,.35); }
+
+.backup-bar { background: #2a5038; border-top: 1px solid rgba(255,255,255,.1); padding: 10px 14px; margin: 0 8px 8px; border-radius: 8px; }
+.backup-bar p { font-size: 11px; color: rgba(255,255,255,.55); margin-bottom: 7px; }
+.backup-btns { display: flex; gap: 6px; }
+.backup-btns button { flex: 1; padding: 6px 4px; font-size: 11px; font-family: inherit; font-weight: 500; border-radius: 6px; border: none; cursor: pointer; }
+.btn-export { background: var(--gold); color: #fff; }
+.btn-import { background: rgba(255,255,255,.12); color: rgba(255,255,255,.8); }
+.btn-export:hover { background: #b8943e; }
+.btn-import:hover { background: rgba(255,255,255,.2); }
+
+.main { margin-left: 230px; flex: 1; padding: 30px 32px; min-height: 100vh; }
+.page { display: none; }
+.page.active { display: block; }
+
+.ph { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 26px; }
+.ph-title { font-family: 'DM Serif Display', serif; font-size: 30px; }
+.ph-sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+
+.stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 22px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; box-shadow: var(--sh); }
+.stat-lbl { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+.stat-val { font-family: 'DM Serif Display', serif; font-size: 26px; margin-top: 6px; }
+.stat-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--sh); overflow: hidden; }
+.card-hd { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.card-title { font-weight: 600; font-size: 14px; }
+
+.tw { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; background: var(--surface2); border-bottom: 1px solid var(--border); white-space: nowrap; }
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:hover { background: var(--surface2); }
+tbody tr:last-child { border-bottom: none; }
+td { padding: 11px 14px; font-size: 13px; vertical-align: middle; }
+.empty-row td { text-align: center; color: var(--muted); padding: 28px; }
+
+.btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all .14s; }
+.btn-primary { background: var(--green); color: #fff; }
+.btn-primary:hover { background: #163020; }
+.btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--surface2); }
+.btn-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border); }
+.btn-danger:hover { background: #f5d0cc; }
+.btn-gold { background: var(--gold); color: #fff; }
+.btn-gold:hover { background: #b8943e; }
+.btn-orange { background: #e67e22; color: #fff; }
+.btn-orange:hover { background: #cf6d17; }
+.btn-orange { background: var(--orange); color: #fff; }
+.btn-orange:hover { background: #cf6d17; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.bg-green  { background: #dff2e5; color: #2d7a48; }
+.bg-yellow { background: #fef9e7; color: #9a7d0a; }
+.bg-red    { background: var(--danger-bg); color: var(--danger); }
+.bg-blue   { background: #eaf0fb; color: #2856a3; }
+.bg-grey   { background: #f0ece6; color: var(--muted); }
+.bg-orange { background: var(--orange-bg); color: var(--orange); }
+.bg-purple { background: #f3eefb; color: #6c3fb5; }
+
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.42); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+.overlay.open { display: flex; }
+.modal { background: #fff; border-radius: 16px; width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; box-shadow: var(--sh-lg); animation: up .2s ease; }
+.modal.wide { max-width: 800px; }
+@keyframes up { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+.modal-hd { padding: 22px 26px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #fff; z-index: 10; border-radius: 16px 16px 0 0; }
+.modal-title { font-family: 'DM Serif Display', serif; font-size: 22px; }
+.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted); line-height: 1; }
+.modal-body { padding: 22px 26px; }
+.modal-ft { padding: 14px 26px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: var(--surface2); border-radius: 0 0 16px 16px; position: sticky; bottom: 0; }
+
+.fg { margin-bottom: 14px; }
+.fg label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 5px; }
+.fg input, .fg select, .fg textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 13px; color: var(--text); outline: none; transition: border-color .15s; background: #fff; }
+.fg input:focus, .fg select:focus, .fg textarea:focus { border-color: var(--green); }
+.fg textarea { resize: vertical; min-height: 72px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.full { grid-column: 1/-1; }
+
+.items-wrap { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.items-wrap table { margin: 0; }
+.items-wrap td { padding: 3px 4px; }
+.items-wrap input, .items-wrap select { border: none; border-radius: 0; padding: 8px 8px; font-size: 13px; width: 100%; outline: none; font-family: inherit; }
+.items-wrap input:focus, .items-wrap select:focus { box-shadow: inset 0 0 0 2px var(--green); }
+
+.totals { margin-top: 14px; padding: 14px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; }
+.tot-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+.tot-row.big { border-top: 1px solid var(--border); margin-top: 8px; padding-top: 10px; font-weight: 700; font-size: 15px; color: var(--green); }
+
+.kor-banner { padding: 13px 18px; border-radius: 11px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; }
+.kor-ok   { background: var(--green-light); border: 1px solid var(--green-border); }
+.kor-warn { background: var(--danger-bg);   border: 1px solid var(--danger-border); }
+.kor-title { font-weight: 600; font-size: 14px; }
+.kor-sub   { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.kor-pct   { font-family: 'DM Serif Display', serif; font-size: 24px; }
+
+/* reminder banner */
+.reminder-banner { padding: 14px 18px; border-radius: 11px; margin-bottom: 18px; background: var(--orange-bg); border: 1px solid var(--orange-border); }
+.reminder-banner h3 { font-size: 14px; font-weight: 600; color: var(--orange); margin-bottom: 8px; }
+.reminder-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--orange-border); font-size: 13px; }
+.reminder-item:last-child { border-bottom: none; }
+
+.q-block { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 14px; overflow: hidden; box-shadow: var(--sh); }
+.q-hd { padding: 14px 20px; background: var(--surface2); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+.q-title { font-weight: 600; font-size: 14px; }
+.q-meta { display: flex; gap: 22px; font-size: 13px; color: var(--muted); }
+.q-body { display: none; padding: 18px 20px; }
+.q-body.open { display: block; }
+
+.sc { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 20px; box-shadow: var(--sh); }
+.sc-hd { padding: 14px 20px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 14px; }
+.sc-body { padding: 20px; }
+.kor-info { padding: 12px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; font-size: 13px; color: var(--muted); line-height: 1.7; margin-bottom: 14px; }
+
+.year-row { display: flex; align-items: center; gap: 10px; }
+.year-row select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 13px; outline: none; background: #fff; }
+
+/* doc preview (invoice-like) */
+.inv-doc { background:#fff; max-width: 820px; margin: 0 auto; padding: 46px 56px; border: 1px solid var(--border); }
+.inv-topline { height: 4px; background: #2f6f8e; margin: -46px -56px 18px; }
+.inv-brand { font-weight: 700; letter-spacing: .6px; color:#2f6f8e; font-size: 22px; text-transform: uppercase; margin-bottom: 26px; }
+.inv-grid { display:grid; grid-template-columns: 260px 1fr; gap: 36px; align-items:start; }
+.inv-title { font-size: 34px; letter-spacing:.6px; color:#333; margin: 0 0 18px; }
+.inv-left p, .inv-right p { margin: 0 0 6px; font-size: 13px; color:#2b2b2b; }
+.inv-left a { color:#2f6f8e; text-decoration: underline; }
+.inv-label { font-weight:700; color:#111; margin-top: 14px; }
+.inv-muted { color:#666; }
+.inv-right { padding-top: 54px; }
+.inv-right .inv-meta { margin-top: 14px; }
+.inv-right .inv-meta div { margin: 0 0 6px; font-size: 13px; }
+.inv-blocktitle { font-weight:700; margin-top: 18px; }
+.inv-bullets { margin: 6px 0 0 18px; padding:0; font-size: 13px; color:#2b2b2b; }
+.inv-bullets li { margin: 0 0 4px; }
+
+.inv-accentline { margin: 14px 0 10px; font-weight:700; }
+.inv-table { width:100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
+.inv-table thead th { background:#2f6f8e; color:#fff; padding: 10px 12px; font-weight:700; border-right: 1px solid rgba(255,255,255,.35); }
+.inv-table thead th:last-child { border-right:none; text-align:right; }
+.inv-table tbody td { padding: 10px 12px; border-bottom: 1px dotted #cfcfcf; border-right: 1px dotted #cfcfcf; vertical-align: top; }
+.inv-table tbody td:last-child { border-right:none; text-align:right; white-space: nowrap; }
+.inv-table .num { text-align:right; white-space:nowrap; }
+.inv-table .desc { width: 50%; }
+.inv-totals { width: 52%; margin-left:auto; margin-top: 18px; font-size: 13px; }
+.inv-totals .row { display:grid; grid-template-columns: 1fr 120px; gap: 12px; padding: 6px 0; border-bottom: 1px dotted #cfcfcf; }
+.inv-totals .row:last-child { border-bottom:none; }
+.inv-totals .row .val { text-align:right; white-space: nowrap; }
+.inv-totals .row.total { border-top: 2px solid #111; padding-top: 10px; margin-top: 8px; font-weight:700; }
+.inv-footer { margin-top: 24px; font-size: 13px; color:#2b2b2b; line-height: 1.7; }
+.inv-pageno { position: absolute; bottom: 26px; right: 30px; color:#666; font-size: 12px; }
+/* readonly field hint */
+.field-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.readonly-field { background: var(--surface2) !important; color: var(--muted) !important; cursor: default; }
+
+@page { size: A4; margin: 12mm 14mm; }
+
+@media print {
+  /* Fallback: als iemand toch Cmd+P drukt zonder de knop, verberg alles */
+  body * { visibility: hidden !important; }
+}
+</style>
+<!-- PDF-generatie voor e-mailbijlage -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div class="app">
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <h1>Mijn<br>Boekhouding</h1>
+    <span>voor zzp &amp; kleine bedrijven</span>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-item active" data-page="dashboard"><span class="ico">◈</span> Dashboard</div>
+    <div class="nav-item" data-page="klanten"><span class="ico">◉</span> Klanten</div>
+    <div class="nav-item" data-page="offertes"><span class="ico">◧</span> Offertes</div>
+    <div class="nav-item" data-page="facturen"><span class="ico">◨</span> Facturen</div>
+    <div class="nav-item" data-page="belasting"><span class="ico">◫</span> Belasting</div>
+    <div class="nav-item" data-page="instellingen"><span class="ico">◎</span> Instellingen</div>
+  </nav>
+  <div class="backup-bar">
+    <p>💾 Sla je data op na elke sessie!</p>
+    <div class="backup-btns">
+      <button class="btn-export" onclick="exportData()">📤 Exporteer</button>
+      <button class="btn-import" onclick="document.getElementById('import-file').click()">📥 Importeer</button>
+    </div>
+  </div>
+  <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
+  <div class="sb-footer">Alle data lokaal — geen internet nodig</div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main">
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="ph">
+    <div><div class="ph-title">Dashboard</div><div class="ph-sub" id="dash-sub"></div></div>
+    <div class="year-row">
+      <label style="font-size:13px;color:var(--muted)">Jaar</label>
+      <select id="dash-year" onchange="renderDashboard()"></select>
+    </div>
+  </div>
+  <div id="reminder-section"></div>
+  <div id="kor-dash"></div>
+  <div class="stats" id="dash-stats"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card">
+      <div class="card-hd"><span class="card-title">Recente facturen</span></div>
+      <div class="tw"><table><thead><tr><th>Nr.</th><th>Klant</th><th>Uitvoering</th><th>Bedrag</th><th>Status</th></tr></thead><tbody id="dash-fac"></tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><span class="card-title">Openstaande offertes</span></div>
+      <div class="tw"><table><thead><tr><th>Nr.</th><th>Klant</th><th>Bedrag</th><th>Status</th></tr></thead><tbody id="dash-off"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- KLANTEN -->
+<div class="page" id="page-klanten">
+  <div class="ph">
+    <div><div class="ph-title">Klanten</div></div>
+    <button class="btn btn-primary" onclick="openKlantModal()">+ Nieuwe klant</button>
+  </div>
+  <div class="card"><div class="tw"><table>
+    <thead><tr><th>Naam</th><th>Bedrijf</th><th>E-mail</th><th>Telefoon</th><th>Acties</th></tr></thead>
+    <tbody id="klanten-tbl"></tbody>
+  </table></div></div>
+</div>
+
+<!-- OFFERTES -->
+<div class="page" id="page-offertes">
+  <div class="ph">
+    <div><div class="ph-title">Offertes</div></div>
+    <button class="btn btn-primary" onclick="openDocModal('offerte')">+ Nieuwe offerte</button>
+  </div>
+  <div class="card"><div class="tw"><table>
+    <thead><tr><th>Nummer</th><th>Uitvoering</th><th>Klant</th><th>Bedrag</th><th>Status</th><th>Acties</th></tr></thead>
+    <tbody id="offertes-tbl"></tbody>
+  </table></div></div>
+</div>
+
+<!-- FACTUREN -->
+<div class="page" id="page-facturen">
+  <div class="ph">
+    <div><div class="ph-title">Facturen</div></div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-orange" onclick="triggerBestelbonImport()">📄 Importeer bestelbon (PDF)</button>
+      <button class="btn btn-primary" onclick="openDocModal('factuur')">+ Nieuwe factuur</button>
+    </div>
+    <input type="file" id="bestelbon-file" accept="application/pdf" style="display:none" onchange="importBestelbonPDF(this)">
+  </div>
+  <div class="card"><div class="tw"><table>
+    <thead><tr><th>Nummer</th><th>Uitvoering</th><th>Factuurdatum</th><th>Klant</th><th>Excl. BTW</th><th>BTW</th><th>Status</th><th>Acties</th></tr></thead>
+    <tbody id="facturen-tbl"></tbody>
+  </table></div></div>
+</div>
+
+<!-- BELASTING -->
+<div class="page" id="page-belasting">
+  <div class="ph">
+    <div><div class="ph-title">Belasting</div><div class="ph-sub">BTW-aangifte overzicht per kwartaal</div></div>
+    <div class="year-row">
+      <select id="tax-year" onchange="renderBelasting()"></select>
+      <button class="btn btn-secondary btn-sm" onclick="exportCSV()">📤 CSV export</button>
+    </div>
+  </div>
+  <div id="kor-tax"></div>
+  <div id="q-blocks"></div>
+  <div id="jaar-card"></div>
+</div>
+
+<!-- INSTELLINGEN -->
+<div class="page" id="page-instellingen">
+  <div class="ph"><div class="ph-title">Instellingen</div></div>
+  <div style="max-width:620px">
+    <div class="sc">
+      <div class="sc-hd">Bedrijfsgegevens</div>
+      <div class="sc-body">
+        <div class="grid2">
+          <div class="fg"><label>Bedrijfsnaam</label><input id="s-naam" placeholder="Mijn Bedrijf"></div>
+          <div class="fg"><label>KVK-nummer</label><input id="s-kvk" placeholder="12345678"></div>
+          <div class="fg"><label>BTW-nummer</label><input id="s-btw" placeholder="NL123456789B01"></div>
+          <div class="fg"><label>IBAN</label><input id="s-iban" placeholder="NL00 BANK 0000 0000 00"></div>
+          <div class="fg full"><label>Adres</label><input id="s-adres" placeholder="Straat 1, 1234 AB Stad"></div>
+          <div class="fg"><label>E-mail</label><input id="s-email" placeholder="info@bedrijf.nl"></div>
+          <div class="fg"><label>Telefoon</label><input id="s-tel" placeholder="06-12345678"></div>
+          <div class="fg"><label>Website</label><input id="s-web" placeholder="www.bedrijf.nl"></div>
+          <div class="fg"><label>Betalingstermijn (dagen)</label><input id="s-term" type="number" value="30"></div>
+          <div class="fg"><label>Standaard BTW-tarief</label>
+            <select id="s-btwpct">
+              <option value="21">21%</option>
+              <option value="9">9%</option>
+              <option value="0">0%</option>
+            </select>
+          </div>
+          <div class="fg full"><label>Factuur voettekst</label><textarea id="s-footer"></textarea></div>
+        </div>
+      </div>
+    </div>
+    <div class="sc">
+      <div class="sc-hd">KOR — Kleine Ondernemersregeling</div>
+      <div class="sc-body">
+        <div class="kor-info">
+          <strong>Wat is KOR?</strong> Als je jaarlijkse omzet onder de drempel blijft (standaard € 20.000), kun je kiezen voor de KOR. Je factureert dan <strong>zonder BTW</strong> en hoeft geen BTW-aangifte te doen. Meld KOR aan bij de Belastingdienst vóór je er gebruik van maakt.
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <input type="checkbox" id="s-kor" style="width:17px;height:17px;cursor:pointer" onchange="toggleKOR()">
+          <label for="s-kor" style="font-size:14px;font-weight:500;cursor:pointer">KOR ingeschakeld</label>
+        </div>
+        <div id="kor-drempel-row" style="display:none">
+          <div class="fg"><label>KOR-drempel (€)</label><input id="s-kor-drempel" type="number" value="20000">
+            <small class="field-hint">Standaard € 20.000. Waarschuwing als je omzet dit bedrag overschrijdt.</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sc">
+      <div class="sc-hd">Data beheer</div>
+      <div class="sc-body">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Exporteer regelmatig je data als back-up. Je kunt het bestand altijd weer importeren — ook na het leeggooien van je cache.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="exportData()">📤 Data exporteren (.json)</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">📥 Data importeren</button>
+          <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="resetData()">🗑️ Alles wissen</button>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="saveSettings()">💾 Instellingen opslaan</button>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- Klant modal -->
+<div class="overlay" id="m-klant" onclick="overlayClose(event,'m-klant')">
+  <div class="modal">
+    <div class="modal-hd"><span class="modal-title" id="m-klant-title">Klant</span><button class="modal-close" onclick="closeModal('m-klant')">✕</button></div>
+    <div class="modal-body">
+      <div class="grid2">
+        <div class="fg"><label>Voornaam</label><input id="k-voornaam" placeholder="Jan"></div>
+        <div class="fg"><label>Achternaam</label><input id="k-achternaam" placeholder="Jansen"></div>
+        <div class="fg full"><label>Bedrijfsnaam</label><input id="k-bedrijf" placeholder="Optioneel"></div>
+        <div class="fg full"><label>Adres</label><input id="k-adres" placeholder="Straat 1, 1234 AB Stad"></div>
+        <div class="fg"><label>E-mail</label><input id="k-email" placeholder="jan@bedrijf.nl"></div>
+        <div class="fg"><label>Telefoon</label><input id="k-tel" placeholder="06-12345678"></div>
+        <div class="fg"><label>KVK-nummer</label><input id="k-kvk" placeholder="Optioneel"></div>
+        <div class="fg"><label>BTW-nummer</label><input id="k-btwnum" placeholder="Optioneel"></div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-secondary" onclick="closeModal('m-klant')">Annuleren</button>
+      <button class="btn btn-primary" onclick="saveKlant()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Doc modal -->
+<div class="overlay" id="m-doc" onclick="overlayClose(event,'m-doc')">
+  <div class="modal wide">
+    <div class="modal-hd">
+      <span class="modal-title" id="m-doc-title">Document</span>
+      <button class="modal-close" onclick="closeModal('m-doc')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="grid3" style="margin-bottom:14px">
+        <div class="fg full" style="grid-column:1/-1"><label>Klant</label>
+          <select id="d-klant"><option value="">— Selecteer klant —</option></select>
+        </div>
+        <div class="fg"><label>Uitvoeringsdatum</label>
+          <input type="date" id="d-uitvoering" oninput="onUitvoeringChange()">
+          <small class="field-hint">Bepaalt ook het factuurnummer</small>
+        </div>
+        <div class="fg"><label>Status</label>
+          <select id="d-status" onchange="onStatusChange()"></select>
+        </div>
+        <div class="fg"><label>Factuurnummer</label>
+          <input id="d-nummer" class="readonly-field" readonly>
+          <small class="field-hint">Automatisch op basis van uitvoeringsdatum</small>
+        </div>
+        <div class="fg" id="d-factuurdatum-row">
+          <label>Factuurdatum</label>
+          <input type="date" id="d-factuurdatum">
+          <small class="field-hint">Pas invullen bij verzenden</small>
+        </div>
+        <div class="fg" id="d-verval-row">
+          <label>Vervaldatum</label>
+          <input type="date" id="d-verval">
+        </div>
+        <div class="fg" id="d-verzonden-row" style="display:none">
+          <label>Verzonden op</label>
+          <input type="date" id="d-verzonden">
+        </div>
+        <div class="fg"><label>Bestelbon nr.</label>
+          <input id="d-bestelbon" placeholder="Optioneel (bijv. 1091)">
+          <small class="field-hint">Wordt getoond op de factuur (referentie klant)</small>
+        </div>
+        <div class="fg"><label>Bestelbon datum</label>
+          <input type="date" id="d-bestelbon-datum">
+        </div>
+        <div class="fg full"><label>Betreft</label>
+          <textarea id="d-betreft" placeholder="Bijv.&#10;• Masterclass AI &amp; HR (1 dagdeel, incl. voorbereiding)"></textarea>
+          <small class="field-hint">Elke regel wordt een bullet op de factuur</small>
+        </div>
+        <div class="fg full"><label>Notitie voor klant</label>
+          <input id="d-notitie" placeholder="Optioneel">
+        </div>
+      </div>
+
+      <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Regels</label>
+      <div class="items-wrap" style="margin-top:6px">
+        <table>
+          <thead><tr>
+            <th style="width:36%">Omschrijving</th>
+            <th style="width:65px">Aantal</th>
+            <th style="width:70px">Eenheid</th>
+            <th style="width:100px">Prijs excl.</th>
+            <th style="width:80px">BTW %</th>
+            <th style="width:30px"></th>
+          </tr></thead>
+          <tbody id="d-items"></tbody>
+        </table>
+      </div>
+      <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="addItemRow()">+ Regel toevoegen</button>
+
+      <div class="totals">
+        <div class="tot-row"><span>Subtotaal excl. BTW</span><span id="tot-excl">€ 0,00</span></div>
+        <div id="tot-btw-rows"></div>
+        <div class="tot-row big"><span>Totaal incl. BTW</span><span id="tot-incl">€ 0,00</span></div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-secondary" onclick="closeModal('m-doc')">Annuleren</button>
+      <button class="btn btn-primary" onclick="saveDoc()">Opslaan als concept</button>
+    </div>
+  </div>
+</div>
+
+<!-- Preview modal -->
+<div class="overlay" id="m-preview" onclick="overlayClose(event,'m-preview')">
+  <div class="modal wide">
+    <div class="modal-hd">
+      <span class="modal-title" id="m-preview-title">Document</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-orange btn-sm no-print" id="btn-verstuur" onclick="verstuurFactuur()" style="display:none">📤 Versturen</button>
+        <button class="btn btn-gold btn-sm no-print" onclick="printOnePage()">🖨️ PDF / Afdrukken</button>
+        <button class="modal-close" onclick="closeModal('m-preview')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="m-preview-body"></div>
+  </div>
+</div>
+
+<!-- Bestelbon import wizard modal -->
+<div class="overlay" id="m-bon" onclick="overlayClose(event,'m-bon')">
+  <div class="modal wide">
+    <div class="modal-hd">
+      <span class="modal-title">Bestelbon import — controleer & vul aan</span>
+      <button class="modal-close" onclick="closeModal('m-bon')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="kor-info" style="margin-bottom:14px">
+        Controleer wat er is herkend uit de PDF. Pas velden aan waar nodig. Klik daarna op <strong>Maak conceptfactuur</strong>.
+      </div>
+
+      <div class="sc" style="margin:0 0 14px 0">
+        <div class="sc-hd">Bestelbon</div>
+        <div class="sc-body">
+          <div class="grid3">
+            <div class="fg"><label>Bestelbon nr</label><input id="bon-nr" placeholder="Bijv. 1091"></div>
+            <div class="fg"><label>Bestelbon datum</label><input id="bon-datum" type="date"></div>
+            <div class="fg"><label>Uitvoeringsdatum</label><input id="bon-uitvoering" type="date"></div>
+            <div class="fg full"><label>Betreft (komt op factuur)</label>
+              <textarea id="bon-betreft" placeholder="• ...&#10;• ..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sc" style="margin:0 0 14px 0">
+        <div class="sc-hd">Klant / opdrachtgever</div>
+        <div class="sc-body">
+          <div class="grid2">
+            <div class="fg full"><label>Naam / bedrijf</label><input id="bon-klant-naam" placeholder="Bedrijfsnaam"></div>
+            <div class="fg full"><label>Adres</label><input id="bon-klant-adres" placeholder="Straat 1, 1234 AB Plaats"></div>
+            <div class="fg"><label>E-mail</label><input id="bon-klant-email" placeholder="mail@bedrijf.nl"></div>
+            <div class="fg"><label>Telefoon</label><input id="bon-klant-tel" placeholder="06-..."></div>
+            <div class="fg"><label>KVK</label><input id="bon-klant-kvk" placeholder="12345678"></div>
+            <div class="fg"><label>BTW</label><input id="bon-klant-btw" placeholder="NL...B.."></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sc" style="margin:0">
+        <div class="sc-hd">Regels (neem over / pas aan)</div>
+        <div class="sc-body">
+          <div class="items-wrap">
+            <table>
+              <thead><tr>
+                <th style="width:46%">Omschrijving</th>
+                <th style="width:70px">Aantal</th>
+                <th style="width:75px">Eenheid</th>
+                <th style="width:120px">Prijs excl.</th>
+                <th style="width:85px">BTW %</th>
+                <th style="width:30px"></th>
+              </tr></thead>
+              <tbody id="bon-items"></tbody>
+            </table>
+          </div>
+          <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="bonAddItemRow()">+ Regel toevoegen</button>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-secondary" onclick="closeModal('m-bon')">Annuleren</button>
+      <button class="btn btn-primary" onclick="applyBestelbonWizard()">Maak conceptfactuur</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════
+const LSKEY = 'mijnboekhouding';
+let DB = {
+  klanten: [], offertes: [], facturen: [],
+  settings: {
+    naam:'', kvk:'', btw:'', iban:'', adres:'', email:'', tel:'', web:'',
+    term: 30, btwpct: 21,
+    kor: false, korDrempel: 20000,
+    footer: 'Betaling graag binnen [TERM] dagen na factuurdatum. Vermeld het factuurnummer bij uw betaling.'
+  }
+};
+
+function lsLoad() {
+  try { const r = localStorage.getItem(LSKEY); if (r) DB = JSON.parse(r); } catch(e){}
+  DB.klanten  ??= []; DB.offertes ??= []; DB.facturen ??= [];
+  DB.settings ??= {};
+  DB.settings.term       ??= 30;
+  DB.settings.btwpct     ??= 21;
+  DB.settings.kor        ??= false;
+  DB.settings.korDrempel ??= 20000;
+  DB.settings.footer     ??= 'Betaling graag binnen [TERM] dagen na factuurdatum. Vermeld het factuurnummer bij uw betaling.';
+}
+function lsSave() { try { localStorage.setItem(LSKEY, JSON.stringify(DB)); } catch(e){} }
+
+// ═══════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════
+const fmt = n => '€\u00a0' + parseFloat(n||0).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+const today = () => new Date().toISOString().slice(0,10);
+const addDays = (d,n) => { const dt=new Date(d); dt.setDate(dt.getDate()+n); return dt.toISOString().slice(0,10); };
+const fmtDate = d => { if(!d) return '—'; const [y,m,dd]=d.split('-'); return `${dd}-${m}-${y}`; };
+const escapeHtml = (s='') => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const genId = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+/**
+ * Nummering op basis van uitvoeringsdatum:
+ * input:  uitvoeringsdatum YYYY-MM-DD, lijst facturen/offertes
+ * output: YYYY-MM-DD-01 (volgende voor die dag)
+ */
+function genNrByDate(uitvoeringsdatum, arr) {
+  const prefix = uitvoeringsdatum || today(); // YYYY-MM-DD
+  const bestaand = arr
+    .filter(x => x.nummer && x.nummer.startsWith(prefix + '-'))
+    .map(x => parseInt(x.nummer.slice(-2)) || 0);
+  const next = bestaand.length ? Math.max(...bestaand) + 1 : 1;
+  return `${prefix}-${String(next).padStart(2,'0')}`;
+}
+
+// Statussen
+const FAC_STATUSES = ['Concept','Voorbereid','Verzonden','Betaald','Te laat','Geannuleerd'];
+const OFF_STATUSES = ['Concept','In behandeling','Verzonden','Geaccepteerd','Afgewezen','Geannuleerd'];
+
+const STATUS_CLASS = {
+  'Concept':'bg-grey','Voorbereid':'bg-purple','In behandeling':'bg-blue',
+  'Verzonden':'bg-blue','Betaald':'bg-green','Geaccepteerd':'bg-green',
+  'Te laat':'bg-red','Geannuleerd':'bg-grey','Afgewezen':'bg-grey'
+};
+const badge = s => `<span class="badge ${STATUS_CLASS[s]||'bg-grey'}">${s}</span>`;
+
+function klantNaam(id) {
+  const k = DB.klanten.find(k=>k.id===id);
+  return k ? (k.bedrijf || `${k.voornaam} ${k.achternaam}`) : '—';
+}
+
+// ═══════════════════════════════════════════════════
+// REMINDER LOGIC
+// Trigger: status = "Voorbereid", reminderMoment = uitvoeringsdatum + 2 dagen 09:00
+// Dashboard toont "Vandaag te versturen" als now >= reminderMoment
+// ═══════════════════════════════════════════════════
+function getReminderMoment(uitvoeringsdatum) {
+  if (!uitvoeringsdatum) return null;
+  const d = new Date(uitvoeringsdatum);
+  d.setDate(d.getDate() + 2);
+  d.setHours(9, 0, 0, 0);
+  return d;
+}
+
+function getReminders() {
+  const now = new Date();
+  return DB.facturen.filter(f => {
+    if (f.status !== 'Voorbereid') return false;
+    const moment = getReminderMoment(f.uitvoering);
+    return moment && now >= moment;
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 3200);
+}
+
+
+// ═══════════════════════════════════════════════════
+// APPLE MAIL + PDF BIJLAGE
+// ═══════════════════════════════════════════════════
+
+// Genereer een PDF via het printvenster (zelfde als Afdrukken, maar met bestandsnaam als titel).
+// Geeft een Promise terug die resolve zodra het printvenster is geopend.
+// De gebruiker kiest "Sla op als PDF" in het printdialoogvenster.
+function generateInvoicePDF(invoice) {
+  return new Promise((resolve, reject) => {
+    const previewBody = document.getElementById('m-preview-body');
+    if (!previewBody) { reject(new Error('Geen preview')); return; }
+
+    const bodyHtml = previewBody.innerHTML || '';
+    if (!bodyHtml.trim()) { reject(new Error('Lege preview')); return; }
+
+    const k = DB.klanten.find(x => x.id === invoice.klantId) || {};
+    const klant = (k.bedrijf || `${k.voornaam||''} ${k.achternaam||''}`.trim() || 'klant')
+      .replace(/[^a-zA-Z0-9\-_\s]/g, '').trim().replace(/\s+/g, '_');
+    const filename = `Factuur_${invoice.nummer||'onbekend'}_${klant}`;
+
+    const w = window.open('', '_blank', 'width=860,height=1100');
+    if (!w) {
+      reject(new Error('Pop-up geblokkeerd'));
+      alert('Pop-up geblokkeerd door je browser.\n\nSafari: Instellingen → Websites → Pop-ups → Toestaan voor dit bestand\nChrome: klik het blokkeer-icoon in de adresbalk');
+      return;
+    }
+
+    w.document.open();
+    w.document.write(`<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <title>${filename}</title>
+  <style>${getPrintCss()}</style>
+</head>
+<body>
+  ${bodyHtml}
+  <script>
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(function() {
+        setTimeout(function() {
+          window.print();
+          window.onafterprint = function() { setTimeout(function() { window.close(); }, 150); };
+        }, 200);
+      });
+    } else {
+      setTimeout(function() {
+        window.print();
+        window.onafterprint = function() { setTimeout(function() { window.close(); }, 150); };
+      }, 400);
+    }
+  <\/script>
+</body>
+</html>`);
+    w.document.close();
+
+    // Resolve meteen zodat de mail daarna kan openen
+    resolve(filename + '.pdf');
+  });
+}
+
+function openAppleMailDraft(invoice) {
+  const k = DB.klanten.find(x=>x.id===invoice.klantId) || {};
+  const to = (k.email||'').trim();
+  if(!to) {
+    alert('Geen e-mailadres gevonden bij deze klant. Vul het e-mailadres in bij Klanten en probeer opnieuw.');
+    return;
+  }
+
+  const s = DB.settings;
+  const subj = `Factuur ${invoice.nummer||''}`.trim();
+  const naam = (k.bedrijf || `${k.voornaam||''} ${k.achternaam||''}`.trim() || 'daar');
+  const uitvoering = invoice.uitvoering ? fmtDate(invoice.uitvoering) : '';
+  const totaal = fmt(invoice.totaalIncl||0);
+  const iban = s.iban ? `\n\nBetalen kan via IBAN ${s.iban} o.v.v. ${invoice.nummer}.` : '';
+  const body =
+`Beste ${naam},
+
+Hierbij ontvang je factuur ${invoice.nummer}${uitvoering?` (uitvoering: ${uitvoering})`:''} ter waarde van ${totaal}.
+${iban}
+
+Met vriendelijke groet,
+${s.naam||''}`.trim();
+
+  // Stap 1: open printvenster voor PDF
+  toast('Printvenster opent — kies "Sla op als PDF"…');
+  generateInvoicePDF(invoice).then(filename => {
+    // Stap 2: open mail-concept na korte vertraging (gebruiker kan PDF opslaan)
+    setTimeout(() => {
+      const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+      const a = document.createElement('a');
+      a.href = mailto;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => document.body.removeChild(a), 300);
+
+      setTimeout(() => {
+        toast('Mail geopend — voeg de opgeslagen PDF toe als bijlage ✓');
+      }, 1000);
+    }, 1200);
+
+  }).catch(err => {
+    console.error('PDF generatie mislukt:', err);
+    // Fallback: open mail zonder PDF
+    const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+    const a = document.createElement('a');
+    a.href = mailto;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => document.body.removeChild(a), 300);
+    toast('Mail geopend (PDF kon niet worden gegenereerd — voeg handmatig toe)');
+  });
+}
+// ═══════════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════════
+const PAGES = {
+  dashboard: renderDashboard,
+  klanten: renderKlanten,
+  offertes: renderOffertes,
+  facturen: renderFacturen,
+  belasting: renderBelasting,
+  instellingen: loadSettings
+};
+
+document.querySelectorAll('.nav-item').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    el.classList.add('active');
+    const pg = el.dataset.page;
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+pg).classList.add('active');
+    PAGES[pg]?.();
+  });
+});
+
+function buildYearSelect(id, cb) {
+  const sel = document.getElementById(id);
+  const cur = new Date().getFullYear();
+  const min = 2025;
+
+  // preserve user selection (otherwise it jumps back to current year on every render)
+  const prev = sel.value;
+
+  const years = [];
+  for (let y = cur; y >= min; y--) years.push(y);
+
+  sel.innerHTML = years.map(y=>`<option value="${y}">${y}</option>`).join('');
+
+  if (prev && years.includes(parseInt(prev))) {
+    sel.value = prev;
+  } else {
+    sel.value = String(cur);
+  }
+
+  if (cb) sel.onchange = cb;
+}
+
+// ═══════════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════════
+const openModal  = id => document.getElementById(id).classList.add('open');
+const closeModal = id => document.getElementById(id).classList.remove('open');
+const overlayClose = (e,id) => { if(e.target===document.getElementById(id)) closeModal(id); };
+
+// ═══════════════════════════════════════════════════
+// EXPORT / IMPORT
+// ═══════════════════════════════════════════════════
+function exportData() {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(DB,null,2)],{type:'application/json'}));
+  a.download = `mijnboekhouding_backup_${today()}.json`;
+  a.click();
+  toast('Data geëxporteerd! Bewaar dit bestand goed.');
+}
+
+function importData(input) {
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if(!confirm('Huidige data wordt vervangen door het geïmporteerde bestand. Doorgaan?')) return;
+      DB = data;
+      DB.klanten??=[]; DB.offertes??=[]; DB.facturen??=[];
+      DB.settings??={};
+      DB.settings.kor??=false; DB.settings.korDrempel??=20000;
+      lsSave(); toast('Data succesvol geïmporteerd ✓');
+      const active = document.querySelector('.nav-item.active')?.dataset.page || 'dashboard';
+      PAGES[active]?.();
+    } catch(err) { alert('Ongeldig bestand. Importeer een eerder geëxporteerd .json bestand.'); }
+  };
+  reader.readAsText(file); input.value='';
+}
+
+function resetData() {
+  if(!confirm('Weet je zeker dat je ALLE data wilt wissen?')) return;
+  if(!confirm('Laatste waarschuwing: exporteer eerst je data als back-up!')) return;
+  DB = { klanten:[], offertes:[], facturen:[], settings: DB.settings };
+  lsSave(); toast('Data gewist'); renderDashboard();
+}
+
+function exportCSV() {
+  const yr = parseInt(document.getElementById('tax-year').value)||new Date().getFullYear();
+  const facs = DB.facturen.filter(f=>(f.uitvoering||'').startsWith(String(yr)));
+  let csv = 'Factuurnr;Uitvoeringsdatum;Factuurdatum;Klant;Status;Excl BTW;BTW;Incl BTW\n';
+  facs.sort((a,b)=>(a.factuurdatum||a.uitvoering||'').localeCompare(b.factuurdatum||b.uitvoering||'')).forEach(f=>{
+    csv += `${f.nummer};${fmtDate(f.uitvoering)};${fmtDate(f.factuurdatum)};${klantNaam(f.klantId)};${f.status};${(f.totaalExcl||0).toFixed(2).replace('.',',')};${(f.btwBedrag||0).toFixed(2).replace('.',',')};${(f.totaalIncl||0).toFixed(2).replace('.',',')}\n`;
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download = `boekhouding_${yr}.csv`;
+  a.click(); toast('CSV geëxporteerd ✓');
+}
+
+// ═══════════════════════════════════════════════════
+// KOR
+// ═══════════════════════════════════════════════════
+function korBanner(year) {
+  const s = DB.settings; if(!s.kor) return '';
+  const facs = DB.facturen.filter(f=>(f.uitvoering||'').startsWith(String(year)));
+  const omzet = facs.reduce((t,f)=>t+(f.totaalExcl||0),0);
+  const drempel = s.korDrempel||20000;
+  const ok = omzet <= drempel;
+  const pct = Math.min(Math.round(omzet/drempel*100),999);
+  return `<div class="kor-banner ${ok?'kor-ok':'kor-warn'}">
+    <div>
+      <div class="kor-title" style="color:${ok?'var(--green)':'var(--danger)'}">${ok?'✓ KOR actief':'⚠️ KOR drempel overschreden'}</div>
+      <div class="kor-sub">Omzet ${year}: ${fmt(omzet)} van drempel ${fmt(drempel)} — ${ok?'geen BTW-aangifte nodig':'reguliere BTW-aangifte verplicht'}</div>
+    </div>
+    <div class="kor-pct" style="color:${ok?'var(--green)':'var(--danger)'}">${pct}%</div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════
+function renderDashboard() {
+  buildYearSelect('dash-year', renderDashboard);
+  const yr = parseInt(document.getElementById('dash-year').value)||new Date().getFullYear();
+  document.getElementById('dash-sub').textContent = yr;
+  document.getElementById('kor-dash').innerHTML = korBanner(yr);
+
+  // Reminders
+  const reminders = getReminders();
+  const reminderEl = document.getElementById('reminder-section');
+  if (reminders.length > 0) {
+    reminderEl.innerHTML = `<div class="reminder-banner">
+      <h3>📬 Vandaag te versturen (${reminders.length})</h3>
+      ${reminders.map(f=>`
+        <div class="reminder-item">
+          <span><b>${f.nummer}</b> — ${klantNaam(f.klantId)} — uitvoering: ${fmtDate(f.uitvoering)}</span>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm" style="background:var(--orange);color:#fff;border:none;cursor:pointer" onclick="verstuurVanuitDashboard('${f.id}')">📤 Versturen</button>
+            <button class="btn btn-secondary btn-sm" onclick="previewDoc('factuur','${f.id}')">👁️ Bekijk</button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  } else {
+    reminderEl.innerHTML = '';
+  }
+
+  const facs = DB.facturen.filter(f=>(f.uitvoering||'').startsWith(String(yr)));
+  const omzet = facs.reduce((s,f)=>s+(f.totaalExcl||0),0);
+  const open  = facs.filter(f=>['Openstaand','Voorbereid','Verzonden'].includes(f.status)).reduce((s,f)=>s+(f.totaalIncl||0),0);
+  const btw   = facs.reduce((s,f)=>s+(f.btwBedrag||0),0);
+
+  document.getElementById('dash-stats').innerHTML = [
+    ['Omzet excl. BTW', fmt(omzet), 'Gefactureerd'],
+    ['Openstaand',      fmt(open),  'Nog te ontvangen'],
+    ['BTW te betalen',  fmt(btw),   'Omzet-BTW'],
+    ['Facturen',        facs.length,'Totaal dit jaar'],
+  ].map(([l,v,s])=>`<div class="stat"><div class="stat-lbl">${l}</div><div class="stat-val">${v}</div><div class="stat-sub">${s}</div></div>`).join('');
+
+  const recentFac = [...DB.facturen].sort((a,b)=>(b.uitvoering||'').localeCompare(a.uitvoering||'')).slice(0,5);
+  document.getElementById('dash-fac').innerHTML = recentFac.length
+    ? recentFac.map(f=>`<tr><td><b>${f.nummer}</b></td><td>${klantNaam(f.klantId)}</td><td>${fmtDate(f.uitvoering)}</td><td>${fmt(f.totaalIncl)}</td><td>${badge(f.status)}</td></tr>`).join('')
+    : '<tr class="empty-row"><td colspan="5">Geen facturen</td></tr>';
+
+  const openOff = DB.offertes.filter(o=>['In behandeling','Verzonden'].includes(o.status)).slice(0,5);
+  document.getElementById('dash-off').innerHTML = openOff.length
+    ? openOff.map(o=>`<tr><td><b>${o.nummer}</b></td><td>${klantNaam(o.klantId)}</td><td>${fmt(o.totaalIncl)}</td><td>${badge(o.status)}</td></tr>`).join('')
+    : '<tr class="empty-row"><td colspan="4">Geen openstaande offertes</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════
+// KLANTEN
+// ═══════════════════════════════════════════════════
+let editKlantId = null;
+
+function openKlantModal(k) {
+  editKlantId = k?.id||null;
+  document.getElementById('m-klant-title').textContent = k?'Klant bewerken':'Nieuwe klant';
+  ['voornaam','achternaam','bedrijf','adres','email','tel','kvk','btwnum'].forEach(f=>{
+    document.getElementById('k-'+f).value = k?.[f]||'';
+  });
+  openModal('m-klant');
+}
+
+function saveKlant() {
+  const v = f => document.getElementById('k-'+f).value.trim();
+  if(!v('voornaam')&&!v('bedrijf')){ alert('Vul minimaal een naam in.'); return; }
+  const k = { id:editKlantId||genId(), voornaam:v('voornaam'), achternaam:v('achternaam'), bedrijf:v('bedrijf'), adres:v('adres'), email:v('email'), tel:v('tel'), kvk:v('kvk'), btwnum:v('btwnum') };
+  if(editKlantId){ const i=DB.klanten.findIndex(x=>x.id===editKlantId); DB.klanten[i]=k; }
+  else DB.klanten.push(k);
+  lsSave(); closeModal('m-klant'); renderKlanten(); toast('Klant opgeslagen ✓');
+}
+
+function deleteKlant(id) {
+  if(!confirm('Klant verwijderen?')) return;
+  DB.klanten=DB.klanten.filter(k=>k.id!==id);
+  lsSave(); renderKlanten(); toast('Klant verwijderd');
+}
+
+function renderKlanten() {
+  document.getElementById('klanten-tbl').innerHTML = DB.klanten.length
+    ? DB.klanten.map(k=>`<tr>
+        <td>${k.voornaam} ${k.achternaam}</td><td>${k.bedrijf||'—'}</td><td>${k.email||'—'}</td><td>${k.tel||'—'}</td>
+        <td style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm" onclick='openKlantModal(${JSON.stringify(k)})'>✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteKlant('${k.id}')">🗑️</button>
+        </td></tr>`).join('')
+    : '<tr class="empty-row"><td colspan="5">Nog geen klanten aangemaakt</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════
+// DOC FORM
+// ═══════════════════════════════════════════════════
+let editDocId = null, currentDocType = 'factuur';
+
+function onUitvoeringChange() {
+  // Herbereken nummer op basis van nieuwe uitvoeringsdatum
+  const uitv = document.getElementById('d-uitvoering').value;
+  if (!uitv) return;
+  const arr = currentDocType === 'factuur' ? DB.facturen : DB.offertes;
+  // Exclude current doc when editing
+  const filtered = editDocId ? arr.filter(x=>x.id!==editDocId) : arr;
+  document.getElementById('d-nummer').value = genNrByDate(uitv, filtered);
+}
+
+function onStatusChange() {
+  const status = document.getElementById('d-status').value;
+  const verzondenRow = document.getElementById('d-verzonden-row');
+  // Show "verzonden op" only when status is Verzonden
+  verzondenRow.style.display = status === 'Verzonden' ? '' : 'none';
+  if (status === 'Verzonden' && !document.getElementById('d-verzonden').value) {
+    document.getElementById('d-verzonden').value = today();
+  }
+}
+
+function openDocModal(type, doc) {
+  currentDocType = type; editDocId = doc?.id||null;
+  document.getElementById('m-doc-title').textContent = `${doc?'Bewerken':'Nieuwe'} ${type}`;
+
+  // Populate klanten
+  const sel = document.getElementById('d-klant');
+  sel.innerHTML = '<option value="">— Selecteer klant —</option>' +
+    DB.klanten.map(k=>`<option value="${k.id}">${k.bedrijf||k.voornaam+' '+k.achternaam}</option>`).join('');
+
+  // Populate statuses
+  const statuses = type === 'factuur' ? FAC_STATUSES : OFF_STATUSES;
+  const statusSel = document.getElementById('d-status');
+  statusSel.innerHTML = statuses.map(s=>`<option value="${s}">${s}</option>`).join('');
+
+  const s = DB.settings;
+  const t = today();
+  const uitv = doc?.uitvoering || t;
+
+  sel.value = doc?.klantId || '';
+  document.getElementById('d-uitvoering').value   = uitv;
+  document.getElementById('d-factuurdatum').value = doc?.factuurdatum || '';
+  document.getElementById('d-verval').value       = doc?.verval || addDays(t, s.term||30);
+  document.getElementById('d-verzonden').value    = doc?.verzondenOp || '';
+  document.getElementById('d-notitie').value      = doc?.notitie || '';
+  document.getElementById('d-bestelbon').value       = doc?.bestelbonNr || '';
+  document.getElementById('d-bestelbon-datum').value = doc?.bestelbonDatum || '';
+  document.getElementById('d-betreft').value         = doc?.betreft || '';
+  statusSel.value = doc?.status || (type === 'factuur' ? 'Concept' : 'Concept');
+
+  // Nummer
+  const arr = type === 'factuur' ? DB.facturen : DB.offertes;
+  const filtered = editDocId ? arr.filter(x=>x.id!==editDocId) : arr;
+  document.getElementById('d-nummer').value = doc?.nummer || genNrByDate(uitv, filtered);
+
+  // Show/hide verzonden row
+  document.getElementById('d-verzonden-row').style.display = (doc?.status === 'Verzonden') ? '' : 'none';
+
+  // Items
+  const tbody = document.getElementById('d-items');
+  tbody.innerHTML = '';
+  const items = doc?.items?.length ? doc.items : [{omschrijving:'',aantal:1,eenheid:'',prijs:'',btwpct:s.btwpct||21}];
+  items.forEach(i=>addItemRow(i));
+  calcTotals();
+  openModal('m-doc');
+}
+
+function addItemRow(item={}) {
+  const tr = document.createElement('tr');
+  const rates = [0,9,21].map(r=>`<option value="${r}"${+item.btwpct===r?'selected':''}>${r}%</option>`).join('');
+  tr.innerHTML = `
+    <td><input placeholder="Omschrijving" value="${item.omschrijving||''}" oninput="calcTotals()"></td>
+    <td><input type="number" value="${item.aantal||1}" min="0" step="any" style="width:58px" oninput="calcTotals()"></td>
+    <td><input placeholder="uur/stk" value="${item.eenheid||''}" style="width:62px"></td>
+    <td><input type="number" placeholder="0,00" value="${item.prijs||''}" step="0.01" min="0" style="width:90px" oninput="calcTotals()"></td>
+    <td><select style="width:74px" onchange="calcTotals()">${rates}</select></td>
+    <td><button onclick="this.closest('tr').remove();calcTotals()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;padding:3px">✕</button></td>`;
+  document.getElementById('d-items').appendChild(tr);
+}
+
+function getItems() {
+  return Array.from(document.querySelectorAll('#d-items tr')).map(tr=>{
+    const inp = tr.querySelectorAll('input');
+    const sel = tr.querySelector('select');
+    return { omschrijving:inp[0].value, aantal:parseFloat(inp[1].value)||0, eenheid:inp[2].value, prijs:parseFloat(inp[3].value)||0, btwpct:parseFloat(sel.value)||0 };
+  });
+}
+
+function calcTotals() {
+  const items = getItems();
+  let excl=0; const btwMap={};
+  items.forEach(i=>{
+    const line=i.aantal*i.prijs; excl+=line;
+    btwMap[i.btwpct]=(btwMap[i.btwpct]||0)+line*(i.btwpct/100);
+  });
+  const btwTotal=Object.values(btwMap).reduce((s,v)=>s+v,0);
+  document.getElementById('tot-excl').textContent = fmt(excl);
+  document.getElementById('tot-incl').textContent = fmt(excl+btwTotal);
+  document.getElementById('tot-btw-rows').innerHTML = Object.entries(btwMap)
+    .sort((a,b)=>+b[0]-+a[0])
+    .map(([r,v])=>`<div class="tot-row"><span>BTW ${r}%</span><span>${fmt(v)}</span></div>`).join('');
+}
+
+function saveDoc() {
+  const klantId = document.getElementById('d-klant').value;
+  if(!klantId){ alert('Selecteer een klant.'); return; }
+  const items = getItems().filter(i=>i.omschrijving||i.prijs);
+  if(!items.length){ alert('Voeg minimaal één regel toe.'); return; }
+
+  let excl=0, btwBedrag=0;
+  items.forEach(i=>{ const line=i.aantal*i.prijs; excl+=line; btwBedrag+=line*(i.btwpct/100); });
+
+  const arr = currentDocType==='factuur' ? DB.facturen : DB.offertes;
+  const status = document.getElementById('d-status').value;
+
+  const doc = {
+    id: editDocId||genId(),
+    nummer: document.getElementById('d-nummer').value,
+    klantId,
+    uitvoering:    document.getElementById('d-uitvoering').value,
+    factuurdatum:  document.getElementById('d-factuurdatum').value || null,
+    verval:        document.getElementById('d-verval').value || null,
+    verzondenOp:   document.getElementById('d-verzonden').value || null,
+    notitie:       document.getElementById('d-notitie').value,
+    bestelbonNr:  document.getElementById('d-bestelbon').value.trim() || null,
+    bestelbonDatum: document.getElementById('d-bestelbon-datum').value || null,
+    betreft:      document.getElementById('d-betreft').value || null,
+    status,
+    items, totaalExcl:excl, btwBedrag, totaalIncl:excl+btwBedrag,
+  };
+
+  if(editDocId){ const i=arr.findIndex(d=>d.id===editDocId); arr[i]=doc; }
+  else arr.push(doc);
+
+  lsSave(); closeModal('m-doc');
+  currentDocType==='factuur' ? renderFacturen() : renderOffertes();
+  toast(`${currentDocType==='factuur'?'Factuur':'Offerte'} opgeslagen ✓`);
+}
+
+function setDocStatus(type, id, status) {
+  const arr = type==='factuur'?DB.facturen:DB.offertes;
+  const d = arr.find(x=>x.id===id);
+  if(d) {
+    d.status = status;
+    // Auto-fill verzonden info
+    if(status === 'Verzonden' && !d.verzondenOp) {
+      d.verzondenOp = today();
+      if(!d.factuurdatum) {
+        d.factuurdatum = today();
+        d.verval = addDays(today(), DB.settings.term||30);
+      }
+    }
+    lsSave();
+  }
+}
+
+function deleteDoc(type, id) {
+  if(!confirm('Verwijderen?')) return;
+  if(type==='factuur') DB.facturen=DB.facturen.filter(d=>d.id!==id);
+  else DB.offertes=DB.offertes.filter(d=>d.id!==id);
+  lsSave(); type==='factuur'?renderFacturen():renderOffertes(); toast('Verwijderd');
+}
+
+function offerteToFactuur(id) {
+  const o = DB.offertes.find(x=>x.id===id); if(!o) return;
+  const uitv = o.uitvoering || today();
+  const f = {...o, id:genId(), nummer:genNrByDate(uitv, DB.facturen), status:'Concept',
+    factuurdatum:null, verzondenOp:null, verval:addDays(today(),DB.settings.term||30)};
+  DB.facturen.push(f); o.status='Geaccepteerd';
+  lsSave(); renderOffertes(); toast('Omgezet naar factuur ✓');
+}
+
+// ═══════════════════════════════════════════════════
+// VERSTUREN (knop in preview & dashboard)
+// ═══════════════════════════════════════════════════
+let previewDocId = null; // track which doc is in preview
+
+function verstuurFactuur() {
+  if(!previewDocId) return;
+  const f = DB.facturen.find(x=>x.id===previewDocId);
+  if(!f) return;
+  if(!confirm(`Factuur ${f.nummer} versturen? Factuurdatum wordt vandaag ingesteld.`)) return;
+
+  f.factuurdatum = today();
+  f.verval       = addDays(today(), DB.settings.term||30);
+  f.status       = 'Verzonden';
+  f.verzondenOp  = today();
+  lsSave();
+
+  openAppleMailDraft(f);
+  toast(`Factuur ${f.nummer} gemarkeerd als verzonden ✓ — factuurdatum: ${fmtDate(today())}`);
+  // Refresh preview
+  previewDoc('factuur', f.id);
+  renderFacturen();
+}
+
+function verstuurVanuitDashboard(id) {
+  const f = DB.facturen.find(x=>x.id===id);
+  if(!f) return;
+  if(!confirm(`Factuur ${f.nummer} versturen? Factuurdatum wordt vandaag ingesteld.`)) return;
+  f.factuurdatum = today(); f.verval = addDays(today(), DB.settings.term||30);
+  f.status = 'Verzonden'; f.verzondenOp = today();
+  lsSave(); openAppleMailDraft(f); renderDashboard(); toast(`Factuur ${f.nummer} gemarkeerd als verzonden ✓`);
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER TABLES
+// ═══════════════════════════════════════════════════
+function renderOffertes() {
+  document.getElementById('offertes-tbl').innerHTML = DB.offertes.length
+    ? [...DB.offertes].sort((a,b)=>(b.uitvoering||'').localeCompare(a.uitvoering||'')).map(o=>`<tr>
+        <td><b>${o.nummer}</b></td>
+        <td>${fmtDate(o.uitvoering)}</td>
+        <td>${klantNaam(o.klantId)}</td>
+        <td>${fmt(o.totaalIncl)}</td>
+        <td><select onchange="setDocStatus('offerte','${o.id}',this.value);renderOffertes()" style="padding:4px 7px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit">
+          ${OFF_STATUSES.map(s=>`<option${o.status===s?' selected':''}>${s}</option>`).join('')}
+        </select></td>
+        <td style="display:flex;gap:5px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="previewDoc('offerte','${o.id}')">👁️</button>
+          <button class="btn btn-secondary btn-sm" onclick='openDocModal("offerte",${JSON.stringify(o).replace(/'/g,"&#39;").replace(/"/g,'&quot;')})'>✏️</button>
+          <button class="btn btn-gold btn-sm" onclick="offerteToFactuur('${o.id}')">→ Factuur</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteDoc('offerte','${o.id}')">🗑️</button>
+        </td></tr>`).join('')
+    : '<tr class="empty-row"><td colspan="6">Nog geen offertes</td></tr>';
+}
+
+function renderFacturen() {
+  document.getElementById('facturen-tbl').innerHTML = DB.facturen.length
+    ? [...DB.facturen].sort((a,b)=>(b.uitvoering||'').localeCompare(a.uitvoering||'')).map(f=>`<tr>
+        <td><b>${f.nummer}</b></td>
+        <td>${fmtDate(f.uitvoering)}</td>
+        <td>${fmtDate(f.factuurdatum)}</td>
+        <td>${klantNaam(f.klantId)}</td>
+        <td>${fmt(f.totaalExcl)}</td>
+        <td>${fmt(f.btwBedrag)}</td>
+        <td><select onchange="setDocStatus('factuur','${f.id}',this.value);renderFacturen()" style="padding:4px 7px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit">
+          ${FAC_STATUSES.map(s=>`<option${f.status===s?' selected':''}>${s}</option>`).join('')}
+        </select></td>
+        <td style="display:flex;gap:5px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="previewDoc('factuur','${f.id}')">👁️</button>
+          <button class="btn btn-secondary btn-sm" onclick='openDocModal("factuur",${JSON.stringify(f).replace(/'/g,"&#39;").replace(/"/g,'&quot;')})'>✏️</button>
+          ${f.status==='Voorbereid'?`<button class="btn btn-orange btn-sm" onclick="verstuurVanuitDashboard('${f.id}')">📤</button>`:''}
+          <button class="btn btn-danger btn-sm" onclick="deleteDoc('factuur','${f.id}')">🗑️</button>
+        </td></tr>`).join('')
+    : '<tr class="empty-row"><td colspan="8">Nog geen facturen</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════
+// PREVIEW
+// ═══════════════════════════════════════════════════
+function previewDoc(type, id) {
+  const arr = type==='factuur'?DB.facturen:DB.offertes;
+  const doc = arr.find(d=>d.id===id);
+  if(!doc){ alert('Document niet gevonden'); return; }
+  const k = DB.klanten.find(x=>x.id===doc.klantId) || {};
+  const s = DB.settings;
+
+  const lbl = type==='factuur' ? 'FACTUUR' : 'OFFERTE';
+  const footer = (s.footer||'').replace('[TERM]', s.term||30);
+
+  previewDocId = id;
+
+  // Show "Versturen" only for factuur that is Concept/Voorbereid
+  const btn = document.getElementById('btn-verstuur');
+  const canSend = (type==='factuur') && ['Concept','Voorbereid'].includes(doc.status||'Concept');
+  btn.style.display = canSend ? '' : 'none';
+
+  // BTW breakdown per rate
+  const btwMap = {};
+  (doc.items||[]).forEach(i=>{
+    const line = (parseFloat(i.aantal)||0)*(parseFloat(i.prijs)||0);
+    const r = parseFloat(i.btwpct)||0;
+    btwMap[r] = (btwMap[r]||0) + line*(r/100);
+  });
+
+  const klantNaam = (k.bedrijf || `${k.voornaam||''} ${k.achternaam||''}`.trim() || '—');
+  const klantAdres = k.adres || [k.address_line1,k.address_line2,k.postal_code,k.city].filter(Boolean).join(' ');
+  const factuurdatum = doc.factuurdatum || doc.datum || '';
+  const uitvoering = doc.uitvoering || '';
+  const verval = doc.verval || '';
+  const bonNr = doc.bestelbonNr || '';
+  const bonDatum = doc.bestelbonDatum || '';
+  const betreft = (doc.betreft||'').trim();
+
+  // bullets from betreft: accept newline separated, or with leading •
+  const bullets = betreft
+    ? betreft.split('\n').map(x=>x.trim()).filter(Boolean).map(x=>x.replace(/^•\s*/,''))
+    : [];
+
+  document.getElementById('m-preview-title').textContent = `${lbl} ${doc.nummer||''}`.trim();
+
+  document.getElementById('m-preview-body').innerHTML = `
+  <div class="inv-doc">
+    <div class="inv-topline"></div>
+
+    <div class="inv-brand">${(s.naam||'').toUpperCase() || 'MIJN BEDRIJF'}</div>
+
+    <div class="inv-grid">
+      <div class="inv-left">
+        <h2 class="inv-title">${lbl}</h2>
+
+        <p><span class="inv-label">${s.naam||''}</span></p>
+        ${s.adres?`<p class="inv-muted">${s.adres}</p>`:''}
+        ${s.email?`<p class="inv-muted">${s.email}</p>`:''}
+        ${s.tel?`<p class="inv-muted">${s.tel}</p>`:''}
+        ${s.web?`<p class="inv-muted">${s.web}</p>`:''}
+
+        ${s.kvk?`<p><span class="inv-label">KVK:</span> ${s.kvk}</p>`:''}
+        ${s.btw?`<p><span class="inv-label">BTW:</span> ${s.btw}</p>`:''}
+        ${s.iban?`<p><span class="inv-label">IBAN:</span> ${s.iban}</p>`:''}
+        ${s.bic?`<p><span class="inv-label">BIC:</span> ${s.bic}</p>`:''}
+      </div>
+
+      <div class="inv-right">
+        <div class="inv-blocktitle">Aan</div>
+        <p><span class="inv-label">${klantNaam}</span></p>
+        ${klantAdres?`<p class="inv-muted">${klantAdres}</p>`:''}
+        ${k.email?`<p class="inv-muted">${k.email}</p>`:''}
+        ${k.tel?`<p class="inv-muted">${k.tel}</p>`:''}
+        ${k.kvk?`<p class="inv-muted">KVK: ${k.kvk}</p>`:''}
+        ${k.btwnum?`<p class="inv-muted">BTW: ${k.btwnum}</p>`:''}
+
+        <div class="inv-meta">
+          ${doc.nummer?`<div><span class="inv-label">${lbl==='FACTUUR'?'Factuurnummer':'Offertenummer'}:</span> ${doc.nummer}</div>`:''}
+          ${factuurdatum?`<div><span class="inv-label">Datum:</span> ${fmtDate(factuurdatum)}</div>`:''}
+          ${verval?`<div><span class="inv-label">${type==='factuur'?'Vervaldatum':'Geldig tot'}:</span> ${fmtDate(verval)}</div>`:''}
+        </div>
+      </div>
+    </div>
+
+    ${bullets.length?`
+      <div class="inv-blocktitle">Betreft:</div>
+      <ul class="inv-bullets">
+        ${bullets.map(b=>`<li>${escapeHtml(b)}</li>`).join('')}
+      </ul>
+    `:''}
+
+    <div class="inv-accentline">
+      ${bonNr?`Bestelbon ${escapeHtml(bonNr)}`:''}
+      ${bonDatum?` (${fmtDate(bonDatum)})`:''}
+      ${uitvoering?`${bonNr?' — ':''}Uitvoeringsdatum ${fmtDate(uitvoering)}`:''}
+    </div>
+
+    <table class="inv-table">
+      <thead>
+        <tr>
+          <th class="desc">Omschrijving</th>
+          <th class="num">Aantal</th>
+          <th class="num">Per stuk</th>
+          <th class="num">BTW</th>
+          <th class="num">Kosten</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${(doc.items||[]).map(i=>{
+          const qty = parseFloat(i.aantal)||0;
+          const unit = parseFloat(i.prijs)||0;
+          const rate = parseFloat(i.btwpct)||0;
+          const line = qty*unit;
+          return `<tr>
+            <td class="desc">${escapeHtml(i.omschrijving||'')}</td>
+            <td class="num">${qty}</td>
+            <td class="num">${fmt(unit)}</td>
+            <td class="num">${rate}%</td>
+            <td class="num">${fmt(line)}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+
+    <div class="inv-totals">
+      <div class="row"><div>Subtotaal</div><div class="val">${fmt(doc.totaalExcl||0)}</div></div>
+      ${Object.entries(btwMap).sort((a,b)=>+b[0]-+a[0]).map(([r,v])=>`
+        <div class="row"><div>BTW ${r}%</div><div class="val">${fmt(v)}</div></div>
+      `).join('')}
+      <div class="row total"><div>Totaal</div><div class="val">${fmt(doc.totaalIncl||0)}</div></div>
+    </div>
+
+    <div class="inv-footer">
+      ${escapeHtml(footer).replace(/\n/g,'<br>')}
+    </div>
+
+    <div class="inv-pageno">Pagina 1/1</div>
+  </div>`;
+
+  openModal('m-preview');
+}
+
+// ═══════════════════════════════════════════════════
+// BELASTING
+// ═══════════════════════════════════════════════════
+function renderBelasting() {
+  buildYearSelect('tax-year', renderBelasting);
+  const yr = parseInt(document.getElementById('tax-year').value)||new Date().getFullYear();
+  document.getElementById('kor-tax').innerHTML = korBanner(yr);
+
+  // Use factuurdatum for tax, fall back to uitvoering
+  const facs = DB.facturen.filter(f=>(f.uitvoering||'').startsWith(String(yr)));
+  let yearExcl=0, yearBtw=0; const yearBtwMap={};
+
+  let qHtml='';
+  for(let q=1;q<=4;q++){
+    const months=[(q-1)*3+1,(q-1)*3+2,(q-1)*3+3];
+    const qf=facs.filter(f=>months.includes(+(f.uitvoering||'').slice(5,7)));
+    const excl=qf.reduce((s,f)=>s+(f.totaalExcl||0),0);
+    const btw=qf.reduce((s,f)=>s+(f.btwBedrag||0),0);
+    yearExcl+=excl; yearBtw+=btw;
+    qf.forEach(f=>{(f.items||[]).forEach(i=>{
+      const line=(parseFloat(i.aantal)||0)*(parseFloat(i.prijs)||0)*(parseFloat(i.btwpct)||0)/100;
+      yearBtwMap[i.btwpct]=(yearBtwMap[i.btwpct]||0)+line;
+    });});
+    const names=['jan–mrt','apr–jun','jul–sep','okt–dec'];
+    qHtml+=`<div class="q-block">
+      <div class="q-hd" onclick="toggleQ(${q})">
+        <div class="q-title">Kwartaal ${q} — ${names[q-1]}</div>
+        <div class="q-meta">
+          <span>Omzet: <b style="color:var(--text)">${fmt(excl)}</b></span>
+          <span>BTW: <b style="color:var(--green)">${fmt(btw)}</b></span>
+          <span id="q-arr-${q}">▼</span>
+        </div>
+      </div>
+      <div class="q-body" id="q-body-${q}">
+        ${qf.length===0?'<div style="color:var(--muted);font-size:13px">Geen facturen in dit kwartaal.</div>':`
+        <table style="font-size:13px">
+          <thead><tr><th>Uitvoering</th><th>Factuurdatum</th><th>Nr.</th><th>Klant</th><th>Status</th><th style="text-align:right">Excl. BTW</th><th style="text-align:right">BTW</th><th style="text-align:right">Incl. BTW</th></tr></thead>
+          <tbody>
+            ${qf.sort((a,b)=>(a.factuurdatum||a.uitvoering||'').localeCompare(b.factuurdatum||b.uitvoering||'')).map(f=>`<tr>
+              <td>${fmtDate(f.uitvoering)}</td>
+              <td>${fmtDate(f.factuurdatum)}</td>
+              <td><b>${f.nummer}</b></td><td>${klantNaam(f.klantId)}</td>
+              <td>${badge(f.status)}</td>
+              <td style="text-align:right">${fmt(f.totaalExcl)}</td>
+              <td style="text-align:right;color:var(--green)">${fmt(f.btwBedrag)}</td>
+              <td style="text-align:right">${fmt(f.totaalIncl)}</td>
+            </tr>`).join('')}
+            <tr style="font-weight:700;background:var(--surface2)">
+              <td colspan="5">Totaal Q${q}</td>
+              <td style="text-align:right">${fmt(excl)}</td>
+              <td style="text-align:right;color:var(--green)">${fmt(btw)}</td>
+              <td style="text-align:right">${fmt(excl+btw)}</td>
+            </tr>
+          </tbody>
+        </table>`}
+      </div>
+    </div>`;
+  }
+  document.getElementById('q-blocks').innerHTML=qHtml;
+
+  document.getElementById('jaar-card').innerHTML=`
+    <div class="card" style="margin-top:8px">
+      <div class="card-hd"><span class="card-title">Jaaroverzicht ${yr}</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
+        <div style="padding:20px;border-right:1px solid var(--border)">
+          <div class="stat-lbl">Totale omzet excl. BTW</div>
+          <div class="stat-val">${fmt(yearExcl)}</div>
+          <div style="margin-top:16px"><div class="stat-lbl">Aantal facturen</div>
+          <div style="font-family:'DM Serif Display',serif;font-size:22px;margin-top:4px">${facs.length}</div></div>
+        </div>
+        <div style="padding:20px">
+          <div class="stat-lbl">BTW uitsplitsing</div>
+          ${Object.entries(yearBtwMap).length===0?'<div style="color:var(--muted);font-size:13px;margin-top:8px">Geen data</div>':
+            Object.entries(yearBtwMap).sort((a,b)=>+b[0]-+a[0]).map(([r,v])=>`
+              <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:13px"><span>BTW ${r}%</span><span style="font-weight:600">${fmt(v)}</span></div>`).join('')}
+          <div style="display:flex;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-weight:700;color:var(--green);font-size:15px">
+            <span>Totaal te betalen</span><span>${fmt(yearBtw)}</span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:12px 20px;border-top:1px solid var(--border);background:var(--surface2);font-size:12px;color:var(--muted)">
+        ⚠️ Gebaseerd op factuurdatum (of uitvoeringsdatum als factuurdatum ontbreekt). Controleer altijd met je boekhouder.
+      </div>
+    </div>`;
+}
+
+function toggleQ(q) {
+  const body=document.getElementById('q-body-'+q);
+  const arr=document.getElementById('q-arr-'+q);
+  body.classList.toggle('open');
+  arr.textContent=body.classList.contains('open')?'▲':'▼';
+}
+
+// ═══════════════════════════════════════════════════
+// INSTELLINGEN
+// ═══════════════════════════════════════════════════
+function loadSettings() {
+  const s=DB.settings;
+  ['naam','kvk','btw','iban','adres','email','tel','web'].forEach(k=>{ document.getElementById('s-'+k).value=s[k]||''; });
+  document.getElementById('s-term').value    = s.term??30;
+  document.getElementById('s-btwpct').value  = s.btwpct??21;
+  document.getElementById('s-footer').value  = s.footer||'';
+  document.getElementById('s-kor').checked   = !!s.kor;
+  document.getElementById('s-kor-drempel').value = s.korDrempel??20000;
+  document.getElementById('kor-drempel-row').style.display = s.kor?'':'none';
+}
+
+function toggleKOR() {
+  document.getElementById('kor-drempel-row').style.display = document.getElementById('s-kor').checked?'':'none';
+}
+
+function saveSettings() {
+  const g=id=>document.getElementById(id).value.trim();
+  DB.settings = {
+    naam:g('s-naam'),kvk:g('s-kvk'),btw:g('s-btw'),iban:g('s-iban'),
+    adres:g('s-adres'),email:g('s-email'),tel:g('s-tel'),web:g('s-web'),
+    term:    parseInt(document.getElementById('s-term').value)||30,
+    btwpct:  parseFloat(document.getElementById('s-btwpct').value)||21,
+    footer:  document.getElementById('s-footer').value,
+    kor:     document.getElementById('s-kor').checked,
+    korDrempel: parseFloat(document.getElementById('s-kor-drempel').value)||20000,
+  };
+  lsSave(); toast('Instellingen opgeslagen ✓');
+}
+
+
+// ═══════════════════════════════════════════════════
+// BESTELBON IMPORT (PDF → concept factuur)
+// Werkt via PDF.js (wordt dynamisch geladen).
+// Als je offline bent en PDF.js niet kan laden, krijg je een melding.
+// ═══════════════════════════════════════════════════
+let _pdfjsReady = false;
+
+function triggerBestelbonImport() {
+  document.getElementById('bestelbon-file').click();
+}
+
+async function ensurePDFJS() {
+  if (_pdfjsReady) return true;
+  // pdf.js via CDN (werkt in de meeste localhost situaties)
+  const src = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js';
+  try {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+    // worker
+    if (window['pdfjsLib']) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+      _pdfjsReady = true;
+      return true;
+    }
+  } catch(e) {}
+  alert('PDF import werkt nu niet (PDF.js kon niet worden geladen). Tip: zorg dat je internet aan hebt tijdens import, of importeer handmatig door een factuur aan te maken.');
+  return false;
+}
+
+function nlMonthToNumber(m) {
+  const map = {januari:1,februari:2,maart:3,april:4,mei:5,juni:6,juli:7,augustus:8,september:9,oktober:10,november:11,december:12};
+  return map[(m||'').toLowerCase()] || null;
+}
+
+function ddmmyyyyToISO(s) {
+  const m = (s||'').match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if (!m) return '';
+  const dd = String(m[1]).padStart(2,'0');
+  const mm = String(m[2]).padStart(2,'0');
+  const yy = m[3];
+  return `${yy}-${mm}-${dd}`;
+}
+
+async function importBestelbonPDF(input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+
+  const ok = await ensurePDFJS();
+  if (!ok) return;
+
+  try {
+    const buf = await file.arrayBuffer();
+    const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+    let fullText = '';
+    for (let p=1; p<=pdf.numPages; p++) {
+      const page = await pdf.getPage(p);
+      const tc = await page.getTextContent();
+      const pageText = tc.items.map(it => it.str).join(' ');
+      fullText += '\n' + pageText;
+    }
+    const parsed = parseBestelbonText(fullText);
+    openBestelbonWizard(parsed);
+  } catch(e) {
+    console.error(e);
+    alert('Kon deze PDF niet lezen. Probeer een andere bestelbon of maak de factuur handmatig aan.');
+  }
+}
+
+function parseBestelbonText(t) {
+  const txt = (t||'').replace(/\s+/g,' ').trim();
+
+  // Opdrachtnummer + datum (dd/mm/yyyy)
+  const mOrder = txt.match(/Opdrachtnummer\s+Datum\s+(\d+)\s+(\d{1,2}\/\d{1,2}\/\d{4})/i);
+  const bestelbonNr = mOrder ? mOrder[1] : '';
+  const bestelbonDatum = mOrder ? ddmmyyyyToISO(mOrder[2]) : '';
+
+  // Uitvoeringsdatum (probeer meerdere patronen)
+  let uitvoerISO = '';
+
+  // 1) expliciete labels zoals "uitvoerdatum", "datum uitvoering", "uitgevoerd op" (dd-mm-jjjj of dd/mm/jjjj)
+  const mExecLabel = txt.match(/(uitvoerdatum|datum uitvoering|uitvoering(?:sdatum)?|uitgevoerd op)\s*[:\-]?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
+  if (mExecLabel) {
+    uitvoerISO = ddmmyyyyToISO(mExecLabel[2].replace(/-/g,'/'));
+  }
+
+  // 2) tekstueel: "op 10 december 2025"
+  if (!uitvoerISO) {
+    const mExecText = txt.match(/op\s+(\d{1,2})\s+(januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)\s+(\d{4})/i);
+    if (mExecText) {
+      const dd = String(mExecText[1]).padStart(2,'0');
+      const mm = String(nlMonthToNumber(mExecText[2])).padStart(2,'0');
+      const yy = mExecText[3];
+      uitvoerISO = `${yy}-${mm}-${dd}`;
+    }
+  }
+
+  // 3) fallback: eerste datum die we tegenkomen (soms staat uitvoering los in PDF)
+  if (!uitvoerISO) {
+    const mAnyDate = txt.match(/\b(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})\b/);
+    if (mAnyDate) uitvoerISO = ddmmyyyyToISO(mAnyDate[1].replace(/-/g,'/'));
+  }
+
+
+  // Klant (leveranciertekst bevat meestal hun gegevens)
+  // Pak blok rond "Ontwikkelhuis" als dit voorkomt
+  let klantNaam = '';
+  let klantAdres = '';
+  let klantEmail = '';
+  let klantTel = '';
+  let klantKVK = '';
+  let klantBTW = '';
+
+  const mKlantNaam = txt.match(/(Ontwikkelhuis\s+HR\s*&\s*Leiderschap)/i) || txt.match(/(Ontwikkelhuis\s+B\.V\.)/i);
+  if (mKlantNaam) klantNaam = mKlantNaam[1].replace(/\s+/g,' ').trim();
+
+  const mEmail = txt.match(/([a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})/i);
+  if (mEmail) klantEmail = mEmail[1];
+
+  const mTel = txt.match(/(0\d{2,3}[-\s]?\d{6,8})/);
+  if (mTel) klantTel = mTel[1];
+
+  const mAdres = txt.match(/(Boegspriet\s+\d+,\s*\d{4}\s*[A-Z]{2}\s*Loosdrecht)/i);
+  if (mAdres) klantAdres = mAdres[1];
+
+  const mKVK = txt.match(/KVK\s+(\d{8})/i);
+  if (mKVK) klantKVK = mKVK[1];
+
+  const mBTW = txt.match(/BTW\s+(NL\d{9}B\d{2})/i);
+  if (mBTW) klantBTW = mBTW[1];
+
+  // Items: regel met € en % (simpel)
+  const items = [];
+  const re = /([A-Za-z0-9 &\-\(\),\.]+?)\s+(\d+(?:[.,]\d+)?)\s+€\s*([\d\.,]+)\s+(\d+(?:[.,]\d+)?)%\s+€\s*([\d\.,]+)/g;
+  let m;
+  while ((m = re.exec(txt)) !== null) {
+    const oms = m[1].trim();
+    const aantal = parseFloat(String(m[2]).replace(',','.')) || 0;
+    const prijs = parseFloat(String(m[3]).replace('.','').replace(',','.')) || 0;
+    const btwpct = parseFloat(String(m[4]).replace(',','.')) || 0;
+    items.push({ omschrijving: oms, aantal, eenheid:'', prijs, btwpct });
+  }
+
+  // Als geen items gevonden: fallback op bekende regel "Beschrijving Aantal Stukprijs Btw Totaal"
+  if (items.length === 0) {
+    const mLine = txt.match(/Beschrijving\s+Aantal\s+Stukprijs\s+Btw\s+Totaal\s+(.+?)\s+Totaal excl/i);
+    if (mLine) {
+      // niet perfect; laat leeg zodat jij kan aanvullen
+      items.push({ omschrijving: mLine[1].trim(), aantal:1, eenheid:'', prijs:0, btwpct:0 });
+    }
+  }
+
+  // Betreft: probeer "Masterclass ..." uit item-omschrijving
+  const betreft = items.length ? items.map(it => `• ${it.omschrijving}`).join('\n') : '';
+
+  return {
+    bestelbonNr,
+    bestelbonDatum,
+    uitvoerISO,
+    klant: { naam: klantNaam, adres: klantAdres, email: klantEmail, tel: klantTel, kvk: klantKVK, btw: klantBTW },
+    items,
+    betreft
+  };
+}
+
+function findOrCreateKlantId(klant) {
+  // Match op bedrijf/naam (case-insensitive) of e-mail
+  const name = (klant?.naam||'').trim();
+  const email = (klant?.email||'').trim().toLowerCase();
+
+  let hit = null;
+  if (email) hit = DB.klanten.find(k => (k.email||'').trim().toLowerCase() === email);
+  if (!hit && name) hit = DB.klanten.find(k => (k.bedrijf||(`${k.voornaam||''} ${k.achternaam||''}`)).trim().toLowerCase() === name.toLowerCase());
+
+  if (hit) return hit.id;
+
+  // Create minimal klant record (bedrijfsnaam)
+  const kid = genId();
+  DB.klanten.push({
+    id: kid,
+    voornaam: '',
+    achternaam: '',
+    bedrijf: name || 'Nieuwe klant',
+    adres: klant?.adres || '',
+    email: klant?.email || '',
+    tel: klant?.tel || '',
+    kvk: klant?.kvk || '',
+    btwnum: klant?.btw || ''
+  });
+  lsSave();
+  return kid;
+}
+
+let _bonParsed = null;
+
+function bonClearItems() {
+  const tbody = document.getElementById('bon-items');
+  tbody.innerHTML = '';
+}
+
+function bonAddItemRow(item={}) {
+  const tr = document.createElement('tr');
+  const rates = [0,9,21].map(r=>`<option value="${r}"${+item.btwpct===r?'selected':''}>${r}%</option>`).join('');
+  tr.innerHTML = `
+    <td><input placeholder="Omschrijving" value="${(item.omschrijving||'').replace(/"/g,'&quot;')}"></td>
+    <td><input type="number" value="${item.aantal??1}" min="0" step="any" style="width:60px"></td>
+    <td><input placeholder="uur/stk" value="${(item.eenheid||'').replace(/"/g,'&quot;')}" style="width:65px"></td>
+    <td><input type="number" placeholder="0,00" value="${item.prijs??''}" step="0.01" min="0" style="width:95px"></td>
+    <td><select style="width:78px">${rates}</select></td>
+    <td><button onclick="this.closest('tr').remove()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;padding:3px">✕</button></td>`;
+  document.getElementById('bon-items').appendChild(tr);
+}
+
+function bonGetItems() {
+  return Array.from(document.querySelectorAll('#bon-items tr')).map(tr=>{
+    const inp = tr.querySelectorAll('input');
+    const sel = tr.querySelector('select');
+    return {
+      omschrijving: inp[0].value.trim(),
+      aantal: parseFloat(inp[1].value)||0,
+      eenheid: inp[2].value.trim(),
+      prijs: parseFloat(inp[3].value)||0,
+      btwpct: parseFloat(sel.value)||0
+    };
+  }).filter(i=>i.omschrijving || i.prijs || i.aantal);
+}
+
+function openBestelbonWizard(parsed) {
+  _bonParsed = parsed || {};
+  document.getElementById('bon-nr').value = (_bonParsed.bestelbonNr||'') || '';
+  document.getElementById('bon-datum').value = (_bonParsed.bestelbonDatum||'') || '';
+  document.getElementById('bon-uitvoering').value = (_bonParsed.uitvoerISO||'') || today();
+  document.getElementById('bon-betreft').value = (_bonParsed.betreft||'') || '';
+
+  const k = _bonParsed.klant || {};
+  document.getElementById('bon-klant-naam').value = k.naam || '';
+  document.getElementById('bon-klant-adres').value = k.adres || '';
+  document.getElementById('bon-klant-email').value = k.email || '';
+  document.getElementById('bon-klant-tel').value = k.tel || '';
+  document.getElementById('bon-klant-kvk').value = k.kvk || '';
+  document.getElementById('bon-klant-btw').value = k.btw || '';
+
+  bonClearItems();
+  const items = (_bonParsed.items && _bonParsed.items.length) ? _bonParsed.items : [{omschrijving:'',aantal:1,eenheid:'',prijs:'',btwpct:DB.settings.btwpct||21}];
+  items.forEach(i=>bonAddItemRow(i));
+
+  openModal('m-bon');
+}
+
+function applyBestelbonWizard() {
+  const bestelbonNr = document.getElementById('bon-nr').value.trim();
+  const bestelbonDatum = document.getElementById('bon-datum').value;
+  const uitvoering = document.getElementById('bon-uitvoering').value || today();
+  const betreft = document.getElementById('bon-betreft').value.trim();
+
+  const klant = {
+    naam: document.getElementById('bon-klant-naam').value.trim(),
+    adres: document.getElementById('bon-klant-adres').value.trim(),
+    email: document.getElementById('bon-klant-email').value.trim(),
+    tel: document.getElementById('bon-klant-tel').value.trim(),
+    kvk: document.getElementById('bon-klant-kvk').value.trim(),
+    btw: document.getElementById('bon-klant-btw').value.trim()
+  };
+
+  if (!klant.naam) { alert('Vul minimaal de klantnaam/bedrijfsnaam in.'); return; }
+
+  const items = bonGetItems();
+  if (!items.length) { alert('Voeg minimaal één regel toe.'); return; }
+
+  const klantId = findOrCreateKlantId(klant);
+
+  const doc = {
+    id: null,
+    klantId,
+    uitvoering,
+    factuurdatum: null,
+    verval: addDays(today(), DB.settings.term||30),
+    verzondenOp: null,
+    status: 'Concept',
+    bestelbonNr: bestelbonNr || null,
+    bestelbonDatum: bestelbonDatum || null,
+    betreft: betreft || null,
+    notitie: bestelbonNr ? `Bestelbon ${bestelbonNr}${uitvoering?`, uitvoerdatum ${fmtDate(uitvoering)}`:''}` : '',
+    items
+  };
+
+  closeModal('m-bon');
+  openDocModal('factuur', doc);
+
+  if (document.querySelector('.nav-item.active')?.dataset.page === 'klanten') renderKlanten();
+  toast('Conceptfactuur aangemaakt ✓ Controleer en pas aan vóór opslaan.');
+}
+
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+lsLoad();
+renderDashboard();
+
+// ─────────────────────────────────────────────────────────────
+// PRINT: force one A4 page (auto-scale if needed)
+// ─────────────────────────────────────────────────────────────
+function printOnePage() {
+  printInvoicePDF();
+}
+
+function getPrintCss() { return `
+    /* ── Pagina-instelling ── */
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap');
+
+    @page {
+      size: A4 portrait;
+      margin: 18mm 16mm 18mm 16mm;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0; padding: 0;
+      background: #fff;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* ── Schaal de factuur zodat hij altijd op 1 A4-pagina past ── */
+    /* Breedte van het printable gebied: 210mm - 32mm marges = 178mm */
+    .inv-doc {
+      width: 178mm;
+      max-width: 178mm;
+      margin: 0 auto;
+      padding: 0;
+      border: none !important;
+      box-shadow: none !important;
+      background: #fff;
+    }
+
+    /* Zorg dat NIETS over de pagina heen loopt */
+    * { max-width: 100%; overflow-wrap: break-word; word-break: break-word; }
+
+    /* Blauwe topbalk */
+    .inv-topline {
+      height: 4px;
+      background: #2f6f8e;
+      margin: 0 0 14mm;
+      display: block;
+      width: 100%;
+    }
+
+    /* Bedrijfsnaam */
+    .inv-brand {
+      font-size: 17pt;
+      font-weight: 700;
+      color: #2f6f8e;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      margin: 0 0 8mm;
+    }
+
+    /* Tweekolomsindeling: afzender links, ontvanger rechts */
+    .inv-grid {
+      display: grid;
+      grid-template-columns: 95mm 1fr;
+      gap: 8mm;
+      align-items: start;
+      margin-bottom: 8mm;
+    }
+
+    .inv-title {
+      font-size: 24pt;
+      font-weight: 700;
+      color: #333;
+      margin: 0 0 5mm;
+      letter-spacing: .4px;
+    }
+
+    .inv-left p, .inv-right p { margin: 0 0 2.5mm; font-size: 10pt; color: #2b2b2b; }
+    .inv-label  { font-weight: 700; color: #111; }
+    .inv-muted  { color: #666; }
+    .inv-right  { padding-top: 10mm; }
+    .inv-right .inv-meta { margin-top: 4mm; }
+    .inv-right .inv-meta div { margin: 0 0 2mm; font-size: 10pt; }
+    .inv-blocktitle { font-weight: 700; margin-top: 5mm; font-size: 10pt; }
+
+    /* Omschrijving bullets */
+    .inv-accentline { font-weight: 700; margin: 4mm 0 2mm; font-size: 10pt; }
+    .inv-bullets { margin: 2mm 0 0 5mm; padding: 0; font-size: 10pt; color: #2b2b2b; }
+    .inv-bullets li { margin: 0 0 1.5mm; }
+
+    /* Regeltabel */
+    .inv-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 4mm;
+      font-size: 9.5pt;
+      page-break-inside: avoid;
+    }
+    .inv-table thead th {
+      background: #2f6f8e !important;
+      color: #fff !important;
+      padding: 3mm 3.5mm;
+      font-weight: 700;
+      border-right: 1px solid rgba(255,255,255,.35);
+      text-align: left;
+    }
+    .inv-table thead th:last-child { border-right: none; text-align: right; }
+    .inv-table tbody td {
+      padding: 2.5mm 3.5mm;
+      border-bottom: 1px dotted #cfcfcf;
+      border-right: 1px dotted #cfcfcf;
+      vertical-align: top;
+    }
+    .inv-table tbody td:last-child { border-right: none; text-align: right; white-space: nowrap; }
+    .inv-table .num  { text-align: right; white-space: nowrap; }
+    .inv-table .desc { width: 48%; }
+    .inv-table tr    { page-break-inside: avoid; }
+
+    /* Subtotaaltabel */
+    .inv-subtotals {
+      width: 54%;
+      margin-left: auto;
+      margin-top: 4mm;
+      border-collapse: collapse;
+      font-size: 9.5pt;
+      page-break-inside: avoid;
+    }
+    .inv-subtotals td { padding: 1.5mm 3mm; }
+    .inv-subtotals td:last-child { text-align: right; white-space: nowrap; }
+    .inv-subtotals .section-total td { border-top: 1px solid #ccc; font-weight: 700; padding-top: 3mm; }
+    .inv-subtotals .grand-total td   { border-top: 2px solid #111; font-weight: 700; font-size: 11pt; padding-top: 3mm; }
+
+    /* Footer / betaalinfo */
+    .inv-footer {
+      margin-top: 6mm;
+      font-size: 9pt;
+      color: #2b2b2b;
+      line-height: 1.65;
+      page-break-inside: avoid;
+    }
+
+    /* Totaalblok */
+    .inv-totals {
+      width: 54%;
+      margin-left: auto;
+      margin-top: 4mm;
+      font-size: 9.5pt;
+      border-collapse: collapse;
+    }
+    .inv-totals .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8mm;
+      padding: 1.5mm 3mm;
+      border-bottom: 1px dotted #cfcfcf;
+    }
+    .inv-totals .row:last-child { border-bottom: none; }
+    .inv-totals .row .val { text-align: right; white-space: nowrap; }
+    .inv-totals .row.total {
+      border-top: 2px solid #111;
+      border-bottom: none;
+      padding-top: 3mm;
+      margin-top: 1mm;
+      font-weight: 700;
+      font-size: 11pt;
+    }
+
+    /* Paginanummer onderaan */
+    .inv-pageno {
+      margin-top: 8mm;
+      text-align: right;
+      font-size: 8.5pt;
+      color: #888;
+    }
+
+    /* Verberg schermknoppen */
+    .no-print, button { display: none !important; }
+  `; }
+
+function openPrintWindow(title, bodyHtml) {
+  const w = window.open('', '_blank', 'width=860,height=1100');
+  if (!w) {
+    alert('Pop-up geblokkeerd door je browser.\n\nSafari: Instellingen → Websites → Pop-ups → Toestaan voor dit bestand\nChrome: klik het blokkeer-icoon in de adresbalk');
+    return null;
+  }
+  w.document.open();
+  w.document.write(`<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <title>${title}</title>
+  <style>${getPrintCss()}</style>
+</head>
+<body>
+  ${bodyHtml}
+  <script>
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(function() {
+        setTimeout(function() {
+          window.print();
+          window.onafterprint = function() { setTimeout(function() { window.close(); }, 150); };
+        }, 200);
+      });
+    } else {
+      setTimeout(function() {
+        window.print();
+        window.onafterprint = function() { setTimeout(function() { window.close(); }, 150); };
+      }, 400);
+    }
+  <\/script>
+</body>
+</html>`);
+  w.document.close();
+  return w;
+}
+
+function printInvoicePDF() {
+  const bodyHtml = document.getElementById('m-preview-body')?.innerHTML || '';
+  if (!bodyHtml.trim()) { alert('Geen preview om te printen.'); return; }
+  openPrintWindow('Factuur', bodyHtml);
+}
+
+</script>
+</body>
+</html>
